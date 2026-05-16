@@ -1,29 +1,67 @@
+// 📁 backend/controllers/authController.js
+
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
 
-// password rule
-function validatePassword(password) {
-  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  return regex.test(password);
-}
+/* ================= FORGOT PASSWORD ================= */
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
 
-/* ================= REGISTER ================= */
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  user.otp = otp;
+  user.otpExpires = Date.now() + 10 * 60 * 1000;
+
+  await user.save();
+
+  await sendEmail(email, "OTP Code", `Your OTP is: ${otp}`);
+
+  res.json({ message: "OTP sent to email" });
+};
+
+
+/* ================= VERIFY OTP ================= */
+exports.verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  if (user.otp !== otp) {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+
+  if (user.otpExpires < Date.now()) {
+    return res.status(400).json({ message: "OTP expired" });
+  }
+
+  res.json({ message: "OTP verified" });
+};
+
+
+/* ================= RESET PASSWORD ================= */
+exports.resetPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  user.otp = null;
+  user.otpExpires = null;
+
+  await user.save();
+
+  res.json({ message: "Password reset successful" });
+};
+
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields required" });
-    }
-
-    if (!validatePassword(password)) {
-      return res.status(400).json({
-        message:
-          "Password must be 8+ chars with uppercase, lowercase, number & special char"
-      });
-    }
+    const { name, email, password, role, dob, gender, wilayat } = req.body;
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -36,105 +74,34 @@ exports.register = async (req, res) => {
       name,
       email,
       password: hashed,
-      role: role || "user"
+      role,
+      dob,
+      gender,
+      wilayat
     });
 
-    res.status(201).json({
-      message: "Registered successfully",
-      user
-    });
+    res.status(201).json({ message: "Registered successfully", user });
 
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-/* ================= LOGIN ================= */
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
-    }
-
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
     res.json({
-      token,
+      token: "demo-token",
       name: user.name,
       role: user.role
     });
-
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-/* ================= FORGOT PASSWORD ================= */
-let resetTokens = {};
-
-exports.forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const token = crypto.randomBytes(20).toString("hex");
-
-    resetTokens[token] = email;
-
-    res.json({
-      message: "Reset token generated",
-      token
-    });
-
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-/* ================= RESET PASSWORD ================= */
-exports.resetPassword = async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-
-    const email = resetTokens[token];
-
-    if (!email) {
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
-
-    if (!validatePassword(newPassword)) {
-      return res.status(400).json({
-        message: "Password does not meet security requirements"
-      });
-    }
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-
-    await User.findOneAndUpdate({ email }, { password: hashed });
-
-    delete resetTokens[token];
-
-    res.json({ message: "Password updated successfully" });
 
   } catch (err) {
     res.status(500).json({ message: err.message });

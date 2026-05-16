@@ -1,132 +1,126 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import API from "../api";
 
 export default function Register() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    role: "user",   // default Guest
+    role: "user",
     name: "",
-    business: "",
     email: "",
-    phone: "",
     password: "",
-    confirm: ""
+    confirm: "",
+    dob: "",
+    gender: "",
+    wilayat: ""
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  // AGE CHECK
+  const calculateAge = (dob) => {
+    const birth = new Date(dob);
+    const diff = Date.now() - birth.getTime();
+    return new Date(diff).getUTCFullYear() - 1970;
+  };
+
+  // EMAIL CHECK
+  const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
+
+  // PASSWORD CHECK (supports @ # $ % & etc.)
+  const isStrongPassword = (password) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // VALIDATIONS
+    if (!formData.name) return alert("Username required");
+    if (!formData.email) return alert("Email required");
+    if (!formData.password) return alert("Password required");
+    if (!formData.confirm) return alert("Confirm password required");
+    if (!formData.dob) return alert("Date of birth required");
+    if (!formData.gender) return alert("Gender required");
+    if (!formData.wilayat) return alert("Wilayat required");
+
+    if (!isValidEmail(formData.email)) {
+      return alert("Invalid email format");
+    }
+
+    if (!isStrongPassword(formData.password)) {
+      return alert(
+        "Password must include uppercase, lowercase, number & special character"
+      );
+    }
+
     if (formData.password !== formData.confirm) {
-      alert("Passwords do not match");
-      return;
+      return alert("Passwords do not match");
+    }
+
+    if (calculateAge(formData.dob) < 18) {
+      return alert("You must be 18+ to register");
     }
 
     try {
-      await API.post("/auth/register", formData);
+      // ✅ REMOVE confirm BEFORE sending
+      const { confirm, ...dataToSend } = formData;
+
+      const res = await API.post("/auth/register", dataToSend);
+
+      console.log(res.data); // 🔥 DEBUG
+
       alert("Registered Successfully");
       navigate("/login");
-    } catch (error) {
-      alert(error.response?.data?.message || "Register Failed");
+
+    } catch (err) {
+      console.log(err); // 🔥 IMPORTANT FOR DEBUG
+      alert(err.response?.data?.message || "Server Error");
     }
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2 style={styles.title}>GET STARTED</h2>
-        <h1 style={styles.heading}>Create your account</h1>
+        <h2>Create Account</h2>
 
         <form onSubmit={handleSubmit} style={styles.form}>
-          {/* Role selection styled like prototype */}
-          <div style={styles.roleBox}>
-            <div
-              style={{
-                ...styles.roleOption,
-                border: formData.role === "user" ? "2px solid #b8860b" : "1px solid #ddd"
-              }}
-              onClick={() => setFormData({ ...formData, role: "user" })}
-            >
-              Guest / Customer
-            </div>
-            <div
-              style={{
-                ...styles.roleOption,
-                border: formData.role === "owner" ? "2px solid #b8860b" : "1px solid #ddd"
-              }}
-              onClick={() => setFormData({ ...formData, role: "owner" })}
-            >
-              Sablah Owner / Host
-            </div>
-          </div>
 
-          {/* Full Name */}
-          <input
-            name="name"
-            placeholder="Full Name"
-            onChange={handleChange}
-            style={styles.input}
-          />
+          <select name="role" onChange={handleChange} style={styles.input}>
+            <option value="user">User</option>
+            <option value="owner">Owner</option>
+            <option value="admin">Admin</option>
+          </select>
 
-          {/* Business Name (only if owner) */}
-          {formData.role === "owner" && (
-            <input
-              name="business"
-              placeholder="Business Name"
-              onChange={handleChange}
-              style={styles.input}
-            />
-          )}
+          <input name="name" placeholder="Full Name" onChange={handleChange} style={styles.input} />
+          <input name="email" placeholder="Email" onChange={handleChange} style={styles.input} />
+          <input type="password" name="password" placeholder="Password" onChange={handleChange} style={styles.input} />
+          <input type="password" name="confirm" placeholder="Confirm Password" onChange={handleChange} style={styles.input} />
 
-          {/* Email */}
-          <input
-            name="email"
-            placeholder="Email"
-            onChange={handleChange}
-            style={styles.input}
-          />
+          <label>Date of Birth</label>
+          <input type="date" name="dob" onChange={handleChange} style={styles.input} />
 
-          {/* Phone (optional) */}
-          <input
-            name="phone"
-            placeholder="Phone (optional)"
-            onChange={handleChange}
-            style={styles.input}
-          />
+          <select name="gender" onChange={handleChange} style={styles.input}>
+            <option value="">Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
 
-          {/* Password */}
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            onChange={handleChange}
-            style={styles.input}
-          />
+          <select name="wilayat" onChange={handleChange} style={styles.input}>
+            <option value="">Select Wilayat</option>
+            <option value="Muscat">Muscat</option>
+            <option value="Seeb">Seeb</option>
+            <option value="Bowsher">Bowsher</option>
+            <option value="Sohar">Sohar</option>
+            <option value="Nizwa">Nizwa</option>
+            <option value="Salalah">Salalah</option>
+          </select>
 
-          {/* Confirm Password */}
-          <input
-            type="password"
-            name="confirm"
-            placeholder="Confirm Password"
-            onChange={handleChange}
-            style={styles.input}
-          />
+          <button style={styles.button}>Register</button>
 
-          <button style={styles.button}>Create Account</button>
         </form>
-
-        <p style={styles.text}>
-          Already have an account?{" "}
-          <Link to="/login" style={styles.link}>Sign in</Link>
-        </p>
       </div>
     </div>
   );
@@ -137,68 +131,25 @@ const styles = {
     height: "100vh",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
-    background: "rgba(240, 191, 76, 0.1)" // ✅ lighter golden background
+    alignItems: "center"
   },
   card: {
     width: "400px",
-    background: "white",
-    padding: "40px",
-    borderRadius: "12px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
-  },
-  title: {
-    textAlign: "center",
-    marginBottom: "5px",
-    color: "#666",
-    fontSize: "14px"
-  },
-  heading: {
-    textAlign: "center",
-    marginBottom: "20px",
-    color: "#b8860b"
+    padding: "20px",
+    boxShadow: "0 0 10px #ccc"
   },
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: "15px"
-  },
-  roleBox: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "15px"
-  },
-  roleOption: {
-    flex: 1,
-    textAlign: "center",
-    padding: "12px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    margin: "0 5px",
-    background: "#fff",
-    fontSize: "14px"
+    gap: "10px"
   },
   input: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    outline: "none"
+    padding: "10px"
   },
   button: {
-    padding: "12px",
+    padding: "10px",
     background: "#b8860b",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer"
-  },
-  text: {
-    textAlign: "center",
-    marginTop: "15px",
-    fontSize: "14px"
-  },
-  link: {
-    color: "#b8860b",
-    textDecoration: "none"
+    color: "#fff",
+    border: "none"
   }
 };

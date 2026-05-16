@@ -1,22 +1,24 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import API from "../api";
 
 export default function ResetPassword() {
-
-  const { token } = useParams();
-
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const [password, setPassword] = useState("");
+  const email = location.state?.email;
+
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-
-      await API.put(`/auth/reset-password/${token}`, {
-        password
+      await API.post("/auth/reset-password", {
+        email,
+        otp,
+        newPassword
       });
 
       alert("Password reset successful");
@@ -24,87 +26,61 @@ export default function ResetPassword() {
       navigate("/login");
 
     } catch (err) {
-
-      alert(
-        err.response?.data?.message || "Reset failed"
-      );
-
+      alert(err.response?.data?.message || "Error");
     }
   };
 
   return (
     <div style={styles.container}>
-
       <div style={styles.card}>
+        <h2>Reset Password</h2>
 
-        <h1 style={styles.title}>Reset Password</h1>
-
-        <form onSubmit={handleSubmit} style={styles.form}>
+        <form onSubmit={handleSubmit}>
+          <input
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            style={styles.input}
+          />
 
           <input
             type="password"
             placeholder="New Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
             style={styles.input}
-            required
           />
 
-          <button type="submit" style={styles.button}>
-            Reset Password
-          </button>
-
+          <button style={styles.button}>Reset Password</button>
         </form>
-
       </div>
-
     </div>
   );
 }
 
 const styles = {
-
   container: {
     height: "100vh",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
-    background: "#F0BF4C"
+    alignItems: "center"
   },
-
   card: {
     width: "350px",
-    background: "white",
-    padding: "40px",
-    borderRadius: "12px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
+    padding: "30px",
+    border: "1px solid #b8860b",
+    borderRadius: "10px"
   },
-
-  title: {
-    textAlign: "center",
-    marginBottom: "20px",
-    color: "#b8860b"
-  },
-
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px"
-  },
-
   input: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd"
+    width: "100%",
+    padding: "10px",
+    marginBottom: "10px"
   },
-
   button: {
-    padding: "12px",
+    width: "100%",
+    padding: "10px",
     background: "#b8860b",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer"
+    color: "#fff",
+    border: "none"
   }
-
 };

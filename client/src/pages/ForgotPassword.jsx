@@ -4,18 +4,18 @@ import { useNavigate } from "react-router-dom";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [token, setToken] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await API.post("/auth/forgot-password", { email });
+      await API.post("/auth/forgot-password", { email });
 
-      setToken(res.data.token);
+      alert("OTP sent to email");
 
-      alert("Reset token generated!");
+      navigate("/reset-password", { state: { email } });
+
     } catch (err) {
       alert(err.response?.data?.message || "Error");
     }
@@ -24,36 +24,18 @@ export default function ForgotPassword() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2 style={styles.title}>ACCOUNT RECOVERY</h2>
-
-        <p style={styles.subtitle}>
-          Enter your email to receive reset token
-        </p>
+        <h2>Forgot Password</h2>
 
         <form onSubmit={handleSubmit}>
           <input
-            style={styles.input}
-            placeholder="Email"
+            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            style={styles.input}
           />
 
-          <button style={styles.button}>Send</button>
+          <button style={styles.button}>Send OTP</button>
         </form>
-
-        {token && (
-          <div style={styles.tokenBox}>
-            <p>Reset Token:</p>
-            <b>{token}</b>
-
-            <button
-              style={styles.smallBtn}
-              onClick={() => navigate("/reset-password")}
-            >
-              Go to Reset Password
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -64,23 +46,13 @@ const styles = {
     height: "100vh",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
-    background: "#fdfaf3"
+    alignItems: "center"
   },
   card: {
     width: "350px",
     padding: "30px",
     border: "1px solid #b8860b",
-    borderRadius: "12px",
-    background: "#fff"
-  },
-  title: {
-    color: "#b8860b",
-    textAlign: "center"
-  },
-  subtitle: {
-    textAlign: "center",
-    marginBottom: "20px"
+    borderRadius: "10px"
   },
   input: {
     width: "100%",
@@ -90,21 +62,8 @@ const styles = {
   button: {
     width: "100%",
     padding: "10px",
-    background: "#F0BF4C",
-    border: "none",
-    color: "#fff"
-  },
-  tokenBox: {
-    marginTop: "15px",
-    padding: "10px",
-    border: "1px dashed #b8860b"
-  },
-  smallBtn: {
-    marginTop: "10px",
-    padding: "8px",
     background: "#b8860b",
     color: "#fff",
-    border: "none",
-    width: "100%"
+    border: "none"
   }
 };

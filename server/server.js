@@ -12,6 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ✅ AUTH ROUTES (KEEP ONLY THIS)
 app.use("/api/auth", authRoutes);
 
 mongoose
