@@ -16,46 +16,38 @@ import AdminUsers from "./pages/AdminUsers";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
-import AllVenues from "./pages/AllVenues";
-
+import Venues from "./pages/AllVenues"; // ✅ FIXED (was AllVenues)
 import ProtectedRoute from "./components/ProtectedRoute";
 
-
 import VerifyOtp from "./pages/VerifyOtp";
-
 
 export default function App() {
   return (
     <BrowserRouter>
 
-      {/* NAVBAR */}
       <Navbar />
 
       <Routes>
 
-        {/* HOME */}
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
 
-        {/* AUTH */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* PASSWORD */}
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* VENUES */}
+        {/* ✅ VENUES (main after login) */}
         <Route
           path="/venues"
           element={
             <ProtectedRoute roleAllowed={["admin", "owner", "user"]}>
-              <AllVenues />
+              <Venues />
             </ProtectedRoute>
           }
         />
 
-        {/* ADMIN */}
         <Route
           path="/admin-dashboard"
           element={
@@ -65,7 +57,6 @@ export default function App() {
           }
         />
 
-        {/* OWNER */}
         <Route
           path="/owner-dashboard"
           element={
@@ -75,7 +66,6 @@ export default function App() {
           }
         />
 
-        {/* PROFILE */}
         <Route
           path="/edit-profile"
           element={
@@ -85,7 +75,6 @@ export default function App() {
           }
         />
 
-        {/* ADMIN USERS */}
         <Route
           path="/admin-users"
           element={
@@ -96,10 +85,9 @@ export default function App() {
         />
 
         <Route path="/verify-otp" element={<VerifyOtp />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+
       </Routes>
 
-      {/* FOOTER */}
       <Footer />
 
     </BrowserRouter>

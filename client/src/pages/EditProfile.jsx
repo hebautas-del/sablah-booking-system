@@ -2,11 +2,30 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function EditProfile() {
+  const [role, setRole] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    password: ""
+    password: "",
+
+    // USER FIELDS
+    dob: "",
+    gender: "",
+    wilayat: "",
+
+    // OWNER FIELDS
+    businessName: "",
+    sablahNameEn: "",
+    sablahNameAr: "",
+    area: "",
+    capacity: "",
+    price: "",
+    address: "",
+    descriptionEn: "",
+    descriptionAr: "",
+    amenities: ""
   });
 
   useEffect(() => {
@@ -14,8 +33,25 @@ export default function EditProfile() {
       name: localStorage.getItem("name") || "",
       email: localStorage.getItem("email") || "",
       phone: localStorage.getItem("phone") || "",
-      password: ""
+      password: "",
+
+      dob: "",
+      gender: "",
+      wilayat: "",
+
+      businessName: "",
+      sablahNameEn: "",
+      sablahNameAr: "",
+      area: "",
+      capacity: "",
+      price: "",
+      address: "",
+      descriptionEn: "",
+      descriptionAr: "",
+      amenities: ""
     });
+
+    setRole(localStorage.getItem("role") || "user");
   }, []);
 
   const handleChange = (e) => {
@@ -44,7 +80,6 @@ export default function EditProfile() {
       alert("Profile updated successfully");
 
       localStorage.setItem("name", response.data.user.name);
-      localStorage.setItem("email", response.data.user.email);
       localStorage.setItem("phone", response.data.user.phone);
 
     } catch (error) {
@@ -55,12 +90,12 @@ export default function EditProfile() {
 
   return (
     <div style={styles.container}>
-
       <div style={styles.card}>
         <h1 style={styles.title}>Edit Profile</h1>
 
         <form onSubmit={handleUpdate} style={styles.form}>
 
+          {/* BASIC INFO */}
           <input
             type="text"
             name="name"
@@ -70,13 +105,13 @@ export default function EditProfile() {
             style={styles.input}
           />
 
+          {/* ❌ EMAIL (READ ONLY) */}
           <input
             type="email"
             name="email"
-            placeholder="Email"
             value={formData.email}
-            onChange={handleChange}
-            style={styles.input}
+            readOnly
+            style={{ ...styles.input, background: "#f3f3f3", cursor: "not-allowed" }}
           />
 
           <input
@@ -97,13 +132,138 @@ export default function EditProfile() {
             style={styles.input}
           />
 
+          {/* USER FIELDS */}
+          {role === "user" && (
+            <>
+              <input
+                type="date"
+                name="dob"
+                value={formData.dob}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="gender"
+                placeholder="Gender"
+                value={formData.gender}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="wilayat"
+                placeholder="Wilayat"
+                value={formData.wilayat}
+                onChange={handleChange}
+                style={styles.input}
+              />
+            </>
+          )}
+
+          {/* OWNER FIELDS */}
+          {role === "owner" && (
+            <>
+              <input
+                type="text"
+                name="businessName"
+                placeholder="Business Name"
+                value={formData.businessName}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="sablahNameEn"
+                placeholder="Sablah Name (EN)"
+                value={formData.sablahNameEn}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="sablahNameAr"
+                placeholder="Sablah Name (AR)"
+                value={formData.sablahNameAr}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="area"
+                placeholder="Area"
+                value={formData.area}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="capacity"
+                placeholder="Capacity"
+                value={formData.capacity}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="price"
+                placeholder="Price"
+                value={formData.price}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="address"
+                placeholder="Address"
+                value={formData.address}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="descriptionEn"
+                placeholder="Description (EN)"
+                value={formData.descriptionEn}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="descriptionAr"
+                placeholder="Description (AR)"
+                value={formData.descriptionAr}
+                onChange={handleChange}
+                style={styles.input}
+              />
+
+              <input
+                type="text"
+                name="amenities"
+                placeholder="Amenities"
+                value={formData.amenities}
+                onChange={handleChange}
+                style={styles.input}
+              />
+            </>
+          )}
+
           <button type="submit" style={styles.button}>
             Save Changes
           </button>
 
         </form>
       </div>
-
     </div>
   );
 }
@@ -119,7 +279,7 @@ const styles = {
   },
 
   card: {
-    width: "450px",
+    width: "500px",
     background: "white",
     padding: "40px",
     borderRadius: "20px",
@@ -137,7 +297,7 @@ const styles = {
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: "18px"
+    gap: "14px"
   },
 
   input: {

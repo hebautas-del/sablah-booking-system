@@ -1,6 +1,12 @@
 import { Link } from "react-router-dom";
 
-export default function Venues() {
+// ✅ PNG IMAGES IMPORT
+import bustan from "../assets/bustan.png";
+import modern from "../assets/modern.png";
+import muttrah from "../assets/muttrah.png";
+import seeb from "../assets/seeb.png";
+
+export default function AllVenues() {
   const venues = [
     {
       id: 1,
@@ -10,8 +16,7 @@ export default function Venues() {
       price: 850,
       rating: 4.9,
       reviews: 184,
-      image:
-        "https://images.unsplash.com/photo-1519167758481-83f550bb49b3"
+      image: bustan
     },
     {
       id: 2,
@@ -21,8 +26,7 @@ export default function Venues() {
       price: 320,
       rating: 4.7,
       reviews: 96,
-      image:
-        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85"
+      image: modern
     },
     {
       id: 3,
@@ -32,8 +36,7 @@ export default function Venues() {
       price: 550,
       rating: 4.8,
       reviews: 142,
-      image:
-        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"
+      image: muttrah
     },
     {
       id: 4,
@@ -43,14 +46,12 @@ export default function Venues() {
       price: 1200,
       rating: 5,
       reviews: 211,
-      image:
-        "https://images.unsplash.com/photo-1517457373958-b7bdd4587205"
+      image: seeb
     }
   ];
 
   return (
     <div style={styles.page}>
-
       <div style={styles.container}>
 
         {/* HEADER */}
@@ -62,13 +63,11 @@ export default function Venues() {
 
         {/* CARDS */}
         <div style={styles.grid}>
-
           {venues.map((venue) => (
             <div key={venue.id} style={styles.card}>
 
               {/* IMAGE */}
               <div style={styles.imageContainer}>
-
                 <img
                   src={venue.image}
                   alt={venue.name}
@@ -82,15 +81,11 @@ export default function Venues() {
                 <div style={styles.rating}>
                   ⭐ {venue.rating} ({venue.reviews})
                 </div>
-
               </div>
 
               {/* CONTENT */}
               <div style={styles.content}>
-
-                <h2 style={styles.name}>
-                  {venue.name}
-                </h2>
+                <h2 style={styles.name}>{venue.name}</h2>
 
                 <div style={styles.info}>
                   📍 {venue.area}
@@ -102,15 +97,9 @@ export default function Venues() {
                 <div style={styles.line}></div>
 
                 <div style={styles.bottom}>
-
                   <div>
-                    <span style={styles.price}>
-                      OMR {venue.price}
-                    </span>
-
-                    <span style={styles.day}>
-                      {" "} / day
-                    </span>
+                    <span style={styles.price}>OMR {venue.price}</span>
+                    <span style={styles.day}> / day</span>
                   </div>
 
                   <Link
@@ -119,18 +108,14 @@ export default function Venues() {
                   >
                     View →
                   </Link>
-
                 </div>
-
               </div>
 
             </div>
           ))}
-
         </div>
 
       </div>
-
     </div>
   );
 }

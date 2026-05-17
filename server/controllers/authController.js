@@ -1,67 +1,15 @@
-// 📁 backend/controllers/authController.js
-
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const sendEmail = require("../utils/sendEmail");
+const jwt = require("jsonwebtoken");
 
-/* ================= FORGOT PASSWORD ================= */
-exports.forgotPassword = async (req, res) => {
-  const { email } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "User not found" });
-
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  user.otp = otp;
-  user.otpExpires = Date.now() + 10 * 60 * 1000;
-
-  await user.save();
-
-  await sendEmail(email, "OTP Code", `Your OTP is: ${otp}`);
-
-  res.json({ message: "OTP sent to email" });
-};
-
-
-/* ================= VERIFY OTP ================= */
-exports.verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "User not found" });
-
-  if (user.otp !== otp) {
-    return res.status(400).json({ message: "Invalid OTP" });
-  }
-
-  if (user.otpExpires < Date.now()) {
-    return res.status(400).json({ message: "OTP expired" });
-  }
-
-  res.json({ message: "OTP verified" });
-};
-
-
-/* ================= RESET PASSWORD ================= */
-exports.resetPassword = async (req, res) => {
-  const { email, newPassword } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "User not found" });
-
-  user.password = await bcrypt.hash(newPassword, 10);
-  user.otp = null;
-  user.otpExpires = null;
-
-  await user.save();
-
-  res.json({ message: "Password reset successful" });
-};
-
+// REGISTER
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role, dob, gender, wilayat } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -80,28 +28,97 @@ exports.register = async (req, res) => {
       wilayat
     });
 
-    res.status(201).json({ message: "Registered successfully", user });
-
+    res.status(201).json({
+      message: "Registered successfully",
+      user
+    });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ message: err.message });
   }
 };
 
+// LOGIN (FIXED — GUARANTEED ROLE + TOKEN + CLEAN RESPONSE)
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
 
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // IMPORTANT: send clean structure for frontend
     res.json({
-      token: "demo-token",
-      name: user.name,
-      role: user.role
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone
+      }
     });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// FORGOT PASSWORD (OTP)
+const otpStore = new Map();
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "User not found" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    otpStore.set(email, otp);
+
+    res.json({ message: "OTP sent", otp }); // demo only
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// RESET PASSWORD
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (otpStore.get(email) != otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await User.findOneAndUpdate(
+      { email },
+      { password: hashed }
+    );
+
+    otpStore.delete(email);
+
+    res.json({ message: "Password updated" });
 
   } catch (err) {
     res.status(500).json({ message: err.message });
