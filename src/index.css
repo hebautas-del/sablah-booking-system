@@ -1,0 +1,61 @@
+/* Global styles */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #faf7f2;
+  color: #6b5d4f;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Dark mode */
+body.dark-mode {
+  background-color: #1b1611;
+  color: #c9bba7;
+}
+
+/* Form elements */
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  background-color: #2a2119;
+  color: #f1e7d6;
+  border-color: #514333;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #c9bba7;
+}
+
+/* Smooth theme transitions */
+button,
+input,
+textarea,
+select,
+a,
+section,
+main {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
